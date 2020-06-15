@@ -159,8 +159,8 @@ def cross_test_all(file_path):
         output1, output2 = model(img0, img1)
         euclidean_distance = F.pairwise_distance(output1, output2, keepdim=True)
         los = criterion(output1, output2, label).item()
-        print("distance: {}, loss: {}".format(euclidean_distance, los))
-        distance_all[key] = {"dist": euclidean_distance, "loss": los}
+        print("distance: {}, loss: {}".format(euclidean_distance.item(), los))
+        distance_all[key] = {"dist": euclidean_distance.item(), "loss": los}
 
         for r in range(f+1, length_path_all):
             p2 = file_path_all[r]
@@ -185,8 +185,8 @@ def cross_test_all(file_path):
             output1, output2 = model(img0, img1)
             euclidean_distance = F.pairwise_distance(output1, output2, keepdim=True)
             los = criterion(output1, output2, label).item()
-            print("distance: {}, loss: {}".format(euclidean_distance, los))
-            distance_all[key] = {"dist": euclidean_distance, "loss": los}
+            print("distance: {}, loss: {}".format(euclidean_distance.item(), los))
+            distance_all[key] = {"dist": euclidean_distance.item(), "loss": los}
     print(distance_all)
     return distance_all
 
