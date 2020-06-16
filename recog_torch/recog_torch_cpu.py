@@ -196,7 +196,6 @@ class SiameseNetwork(nn.Module):
             nn.Dropout(0.3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(16),
-
         )
 
         self.fc1 = nn.Sequential(
@@ -286,6 +285,60 @@ if __name__ == "__main__":
                 iteration_number += 10
                 counter.append(iteration_number)
                 loss_history.append(loss_contrastive.item())
+
+
+    # list_similar_path_copy = []
+    # dict_wrong_path_copy = {}
+    #
+    #
+    # def create_similar_couple(path=None):
+    #     for path in list_similar_path:
+    #         if path in list_similar_path_copy:
+    #             continue
+    #         list_similar_path_copy.append(path)
+    #         break
+    #     mat = recon(path)
+    #     # print(mat.shape)
+    #     mat_similar = recon(path, similar=True)
+    #     floor = mat.shape[0]
+    #
+    #     similar_couple = []
+    #     for m in (mat, mat_similar):
+    #         full = np.zeros(shape=shape)
+    #         full[:floor, :, :] = m[:, :shape[1], :shape[2]]
+    #         similar_couple.append(full)
+    #
+    #     print("-----create similar finished------")
+    #     return np.array(similar_couple)
+    #
+    #
+    # def create_wrong_couple(path=None, path_next=None):
+    #     for path in dict_wrong_path:
+    #         if path in dict_wrong_path_copy:
+    #             for path_next in dict_wrong_path[path]:
+    #                 if path_next in dict_wrong_path_copy[path]:
+    #                     path_next = None
+    #                     continue
+    #                 dict_wrong_path_copy[path].add(path_next)
+    #                 break
+    #         else:
+    #             path_next = dict_wrong_path[path].pop()
+    #             dict_wrong_path[path].add(path_next)
+    #             dict_wrong_path_copy[path] = {path_next}
+    #
+    #         if path_next is None:
+    #             continue
+    #         break
+    #
+    #     wrong_couple = []
+    #     for p in (path, path_next):
+    #         mat = recon(p)
+    #         floor = mat.shape[0]
+    #         full = np.zeros(shape=shape)
+    #         full[:floor, :, :] = mat[:, :shape[1], :shape[2]]
+    #         wrong_couple.append(full)
+    #     return np.array(wrong_couple)
+
 
     torch.save(net, 'model_cpu.pkl')
     show_plot(counter, loss_history)
