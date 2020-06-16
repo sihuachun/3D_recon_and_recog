@@ -141,9 +141,9 @@ def cross_test_all(file_path):
         print("------create similar couple: {}------".format(key))
         mat = recon(p)
         mat_similar = recon(p, similar=True)
-        floor = mat.shape[0]
 
         similar_couple = []
+        floor = mat.shape[0]
         for m in (mat, mat_similar):
             full = np.zeros(shape=shape)
             full[:floor, :, :] = m[:, :shape[1], :shape[2]]
@@ -161,16 +161,16 @@ def cross_test_all(file_path):
         los = criterion(output1, output2, label).item()
         print("distance: {}, loss: {}".format(euclidean_distance.item(), los))
         distance_all[key] = {"dist": euclidean_distance.item(), "loss": los}
-
-        for r in range(f+1, length_path_all):
+        # break
+        for r in range(f + 1, length_path_all):
             p2 = file_path_all[r]
             key = str((p, p2))
             print("------create wrong couple: {}------".format(key))
-            # mat = recon(p)
             mat_wrong = recon(p2)
-            # floor = mat.shape[0]
+
             wrong_couple = []
             for m in (mat, mat_wrong):
+                floor = m.shape[0]
                 full = np.zeros(shape=shape)
                 full[:floor, :, :] = m[:, :shape[1], :shape[2]]
                 wrong_couple.append(full)
@@ -194,4 +194,14 @@ def cross_test_all(file_path):
 if __name__ == "__main__":
     model = torch.load('model_cpu.pkl')
     model.eval()
-    cross_test_all(file_path=path)
+    da = cross_test_all(file_path=path)
+    del model
+
+    import pandas as pd
+
+    df = pd.DataFrame(columns=["path_sample1", "path_sample2", "distance", "loss"])
+    for k in da:
+        p1, p2 = k.split(",")
+        df = df.append({"path_sample1": p1[1:], "path_sample2": p2[1:], "distance": da[k]['dist'], "loss": da[k]['loss']},
+                  ignore_index=True)
+    df.to_csv("cross_result.csv", index=False)
