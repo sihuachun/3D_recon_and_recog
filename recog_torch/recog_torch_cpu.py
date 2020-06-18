@@ -127,7 +127,6 @@ from torch import optim
 import torch.nn.functional as F
 from torchsummary import summary
 
-
 # Custom Dataset Function¶
 # This dataset generates a pair of images. 0 for genuine pair and 1 for impostor pair
 def generator(batch_size):

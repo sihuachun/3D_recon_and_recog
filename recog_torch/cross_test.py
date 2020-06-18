@@ -205,3 +205,19 @@ if __name__ == "__main__":
         df = df.append({"path_sample1": p1[1:], "path_sample2": p2[1:], "distance": da[k]['dist'], "loss": da[k]['loss']},
                   ignore_index=True)
     df.to_csv("cross_result.csv", index=False)
+
+
+#可以考虑直接存储为方便画heatMap的数据格式，可以参考这段代码
+# heatMapData = np.zeros((FinalX.shape[0], FinalX.shape[0]))
+#
+# import time
+# t1 = time.time()
+# for i in range(FinalX.shape[0]):
+#     for j in range(FinalX.shape[0]):
+#         ssim_noise = ssim(FinalX[i], FinalX[j], multichannel=True)
+#         print(i, j, ssim_noise)
+#         print('Running time: ', time.time() - t1)
+#         heatMapData[i, j] = ssim_noise
+#         t1 = time.time()
+#
+# np.save("heatmapData_1222_296.npy", heatMapData)
