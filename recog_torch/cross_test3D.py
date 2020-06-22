@@ -1,7 +1,10 @@
+"""
+3D data cross test
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.utils.data import DataLoader, Dataset
 import dxchange
 import tomopy
@@ -10,7 +13,7 @@ import glob
 import warnings
 
 path = './NUS 3D 数据/'
-shape = (80, 728, 728)
+shape = (100, 728, 728)
 warnings.filterwarnings("ignore")
 
 
@@ -138,6 +141,8 @@ def cross_test_all(file_path):
     for f in range(length_path_all):
         p = file_path_all[f]
         key = str((p, p))
+        # if key not in crossed_dict:
+
         print("------create similar couple: {}------".format(key))
         mat = recon(p)
         mat_similar = recon(p, similar=True)
@@ -160,12 +165,17 @@ def cross_test_all(file_path):
         euclidean_distance = F.pairwise_distance(output1, output2, keepdim=True)
         los = criterion(output1, output2, label).item()
         print("distance: {}, loss: {}".format(euclidean_distance.item(), los))
-        distance_all[key] = {"dist": euclidean_distance.item(), "loss": los}
+        distance_all[key] = {"distance": euclidean_distance.item(), "loss": los}
+        # else:
+        #     print("------crossed sample couple------")
+
         # break
         for r in range(f + 1, length_path_all):
             p2 = file_path_all[r]
             key = str((p, p2))
+            # if key not in crossed_dict:
             print("------create wrong couple: {}------".format(key))
+            mat = recon(p)
             mat_wrong = recon(p2)
 
             wrong_couple = []
@@ -186,38 +196,27 @@ def cross_test_all(file_path):
             euclidean_distance = F.pairwise_distance(output1, output2, keepdim=True)
             los = criterion(output1, output2, label).item()
             print("distance: {}, loss: {}".format(euclidean_distance.item(), los))
-            distance_all[key] = {"dist": euclidean_distance.item(), "loss": los}
+            distance_all[key] = {"distance": euclidean_distance.item(), "loss": los}
+            # else:
+            #     print("------crossed sample couple------")
     print(distance_all)
     return distance_all
 
 
 if __name__ == "__main__":
-    model = torch.load('model_cpu.pkl')
+
+    model = torch.load('model_3D.pkl')
     model.eval()
     da = cross_test_all(file_path=path)
+    # da.update(crossed_dict)
     del model
 
     import pandas as pd
 
     df = pd.DataFrame(columns=["path_sample1", "path_sample2", "distance", "loss"])
     for k in da:
-        p1, p2 = k.split(",")
-        df = df.append({"path_sample1": p1[1:], "path_sample2": p2[1:], "distance": da[k]['dist'], "loss": da[k]['loss']},
-                  ignore_index=True)
-    df.to_csv("cross_result.csv", index=False)
-
-
-#可以考虑直接存储为方便画heatMap的数据格式，可以参考这段代码
-# heatMapData = np.zeros((FinalX.shape[0], FinalX.shape[0]))
-#
-# import time
-# t1 = time.time()
-# for i in range(FinalX.shape[0]):
-#     for j in range(FinalX.shape[0]):
-#         ssim_noise = ssim(FinalX[i], FinalX[j], multichannel=True)
-#         print(i, j, ssim_noise)
-#         print('Running time: ', time.time() - t1)
-#         heatMapData[i, j] = ssim_noise
-#         t1 = time.time()
-#
-# np.save("heatmapData_1222_296.npy", heatMapData)
+        p1, p2 = k.split(", ")
+        df = df.append(
+            {"path_sample1": p1[1:], "path_sample2": p2[:-1], "distance": da[k]['distance'], "loss": da[k]['loss']},
+            ignore_index=True)
+    df.to_csv("cross3D.csv", index=False)

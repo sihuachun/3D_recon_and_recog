@@ -1,3 +1,8 @@
+"""
+3D data siamese network
+"""
+
+
 import dxchange
 import tomopy
 import numpy as np
@@ -5,7 +10,7 @@ import glob
 import warnings
 
 path = './NUS 3D 数据/'
-shape = (80, 728, 728)
+shape = (100, 728, 728)
 warnings.filterwarnings("ignore")
 list_similar_path = []
 dict_wrong_path = {}
@@ -86,7 +91,7 @@ def create_wrong_couple(file_path):
                 else:
                     dict_wrong_path[temp_path].add(depth_file)
             else:
-                dict_wrong_path[temp_path] = set()
+                dict_wrong_path[temp_path] = {depth_file}
         print(depth_file)
         mat = recon(depth_file)
         # print(mat.shape)
@@ -126,6 +131,7 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 from torchsummary import summary
+
 
 # Custom Dataset Function¶
 # This dataset generates a pair of images. 0 for genuine pair and 1 for impostor pair
@@ -200,8 +206,10 @@ class SiameseNetwork(nn.Module):
         self.fc1 = nn.Sequential(
             nn.Linear(16 * 91 * 91, 512),
             nn.ReLU(inplace=True),
+
             nn.Linear(512, 512),
             nn.ReLU(inplace=True),
+
             nn.Linear(512, 128))
 
     def forward_once(self, x):
@@ -243,7 +251,7 @@ if __name__ == "__main__":
 
     def show_plot(iteration, loss):
         plt.plot(iteration, loss)
-        plt.savefig("fig_loss_trend.png")
+        plt.savefig("fig_loss_trend_3D.png")
         plt.show()
 
 
@@ -251,49 +259,56 @@ if __name__ == "__main__":
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # PyTorch v0.4.0
     net = SiameseNetwork().cpu()
     print(summary(net, input_size=[shape, shape], device="cpu"))
+    net = net.double()
 
     criterion = ContrastiveLoss()
     optimizer = optim.Adam(net.parameters(), lr=0.0005, weight_decay=0.2)
 
-    batch_size = 22
-    siamese_dataset = generator(batch_size)
-    train_dataloader = DataLoader(DealDataset(siamese_dataset),
-                                  shuffle=True,
-                                  num_workers=10,
-                                  batch_size=1)
-    siamese_dataset = 0
+    # epoch 0
     counter = []
     loss_history = []
     iteration_number = 0
+    i_counter = 0
+    batch_size = 16
+    for b in range(2):
+        siamese_dataset = generator(batch_size)
+        train_dataloader = DataLoader(DealDataset(siamese_dataset),
+                                      shuffle=True,
+                                      num_workers=10,
+                                      batch_size=1)
+        siamese_dataset = 0
 
-    for epoch in range(0, 5):
-        for i, data in enumerate(train_dataloader, 0):
-            img0, img1, label = data
-            img0, img1, label = img0.double(), img1.double(), label.double()
-            # img0, img1, label = img0.cuda(), img1.cuda(), label.cuda()
-            net = net.double()
-            optimizer.zero_grad()
-            output1, output2 = net(img0, img1)
-            loss_contrastive = criterion(output1, output2, label)
-            loss_contrastive.backward()
-            optimizer.step()
-            if i % 10 == 0:
-                print("Epoch number {}\n Current loss {}\n".format(epoch, loss_contrastive.item()))
-                iteration_number += 10
-                counter.append(iteration_number)
-                loss_history.append(loss_contrastive.item())
+        for epoch in range(0, 5):
+            for i, data in enumerate(train_dataloader, 0):
+                img0, img1, label = data
+                img0, img1, label = img0.double(), img1.double(), label.double()
+                optimizer.zero_grad()
+                output1, output2 = net(img0, img1)
+                loss_contrastive = criterion(output1, output2, label)
+                loss_contrastive.backward()
+                optimizer.step()
+                if i_counter % 10 == 0:
+                    print("Epoch number {}\n Current loss {}\n".format(epoch, loss_contrastive.item()))
+                    iteration_number += 10
+                    counter.append(iteration_number)
+                    loss_history.append(loss_contrastive.item())
+                i_counter += 1
 
+    print(list_similar_path)
+    print(dict_wrong_path)
 
     # list_similar_path_copy = []
     # dict_wrong_path_copy = {}
-    #
-    #
+
     # def create_similar_couple(path=None):
+    #     """rewrite function to solve out of memory problem"""
+    #     print("------create similar couple------")
     #     for path in list_similar_path:
     #         if path in list_similar_path_copy:
     #             continue
     #         list_similar_path_copy.append(path)
     #         break
+    #     print(path)
     #     mat = recon(path)
     #     # print(mat.shape)
     #     mat_similar = recon(path, similar=True)
@@ -310,6 +325,8 @@ if __name__ == "__main__":
     #
     #
     # def create_wrong_couple(path=None, path_next=None):
+    #     """rewrite function to solve out of memory problem"""
+    #     print("------create wrong couple------")
     #     for path in dict_wrong_path:
     #         if path in dict_wrong_path_copy:
     #             for path_next in dict_wrong_path[path]:
@@ -326,7 +343,8 @@ if __name__ == "__main__":
     #         if path_next is None:
     #             continue
     #         break
-    #
+    #     print(path)
+    #     print(path_next)
     #     wrong_couple = []
     #     for p in (path, path_next):
     #         mat = recon(p)
@@ -335,7 +353,28 @@ if __name__ == "__main__":
     #         full[:floor, :, :] = mat[:, :shape[1], :shape[2]]
     #         wrong_couple.append(full)
     #     return np.array(wrong_couple)
+    #
+    # for epoch in range(1, 3):
+    #     siamese_dataset = generator(batch_size)
+    #     train_dataloader = DataLoader(DealDataset(siamese_dataset),
+    #                                   shuffle=True,
+    #                                   num_workers=10,
+    #                                   batch_size=1)
+    #     siamese_dataset = 0
+    #     for i, data in enumerate(train_dataloader, 0):
+    #         img0, img1, label = data
+    #         img0, img1, label = img0.double(), img1.double(), label.double()
+    #         optimizer.zero_grad()
+    #         output1, output2 = net(img0, img1)
+    #         loss_contrastive = criterion(output1, output2, label)
+    #         loss_contrastive.backward()
+    #         optimizer.step()
+    #         if i_counter % 10 == 0:
+    #             print("Epoch number {}\n Current loss {}\n".format(i, loss_contrastive.item()))
+    #             iteration_number += 10
+    #             counter.append(iteration_number)
+    #             loss_history.append(loss_contrastive.item())
+    #         i_counter += 1
 
-
-    torch.save(net, 'model_cpu.pkl')
+    torch.save(net, 'model_3D.pkl')
     show_plot(counter, loss_history)
