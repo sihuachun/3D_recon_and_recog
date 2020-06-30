@@ -14,9 +14,9 @@ import numpy as np
 
 def draw_heat_map(df, rx_tick, sz_tick, sz_tick_num, rx_tick_num, x_label, z_label, map_title):
     # 用于画图
-    #c_map = sns.cubehelix_palette(start=1.6, light=0.8, as_cmap=True, reverse=True)
-    #plt.subplots(figsize=(6, 6))
-    ax = sns.heatmap(df, square=True, xticklabels=rx_tick, yticklabels=sz_tick, cmap="YlGnBu")
+    # c_map = sns.cubehelix_palette(start=1.6, light=0.8, as_cmap=True, reverse=True)
+    # plt.subplots(figsize=(6, 6))
+    ax = sns.heatmap(df, square=True, xticklabels=rx_tick, yticklabels=sz_tick, cmap="YlGnBu", annot=True, fmt=)
 
     ax.set_xticks(rx_tick_num)
     ax.set_yticks(sz_tick_num)
@@ -26,14 +26,13 @@ def draw_heat_map(df, rx_tick, sz_tick, sz_tick_num, rx_tick_num, x_label, z_lab
     ax.set_title(map_title)
     plt.savefig(map_title + '.png', dpi=300)
 
-    plt.axis([0, 25, 25, 0])
+    plt.axis([0, len(index), len(index), 0])
 
     plt.show()
     plt.close()
 
 
-#heatMapData = np.load("heatmapData_1222_296.npy")
-heatMapData = pd.read_excel("HeatMapData.xlsx")
+# heatMapData = np.load("heatmapData_1222_296.npy")
 # np.savetxt('heatmapData_316.txt', heatMapData)
 
 # [rows, cols] = heatMapData.shape
@@ -61,20 +60,31 @@ heatMapData = pd.read_excel("HeatMapData.xlsx")
 #
 # np.save("heatmapData316.npy", heatMapData)
 
-#f, ax = plt.subplots(figsize=(10, 9))
+# f, ax = plt.subplots(figsize=(10, 9))
+
+path = "./cross2D_standard_sample1_standard.csv"
+data = pd.read_csv(path)
+print(data.head())
+index = list(data['path_sample1'].drop_duplicates(keep="first"))
+print(len(index))
+columns = ["unnamed"+str(i) for i in range(len(index))]
+heatMapData = pd.DataFrame(columns=columns)
+
+for i in index:
+    row = list(data[data["path_sample1"] == i]['distance'])
+    row = [np.NaN] + row
+    while len(row) < len(index) + 1:
+        row = [np.NaN] + row
+
+    row = dict(zip(columns, row))
+    # print(row)
+    heatMapData = heatMapData.append(row, ignore_index=True)
+
+
 f, ax = plt.subplots()
 
-#sns.heatmap(heatMapData, ax=ax, square=True)
+rx_tick = range(0, len(index), 1)
+sz_tick = range(0, len(index), 1)
 
-rx_tick = range(0, 25, 5)
-sz_tick = range(0, 25, 5)
-
-draw_heat_map(heatMapData, rx_tick, sz_tick, sz_tick, rx_tick,'', '','HeatMap')
-
-#ax = sns.heatmap(heatMapData)
-
-#plt.savefig('heatmap.png')
-
-
-#plt.show()
+draw_heat_map(heatMapData, rx_tick, sz_tick, sz_tick, rx_tick, '', '', 'HeatMap_2D')
 
