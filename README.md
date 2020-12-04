@@ -1,5 +1,5 @@
 # 3D_recon_and_recog
-## Project description: Use Siamese neural network to realize the authentication of positive and negative image sample pairs.
+// Project description: Use Siamese neural network to realize the authentication of positive and negative image sample pairs.
 ## Steps:
   ### 1.Visualize 3D image data and construct 2D and 3D positive and negative sample pair data sets;
   ### 2.Construct a twin neural network framework based on deep separable convolutional network, fully connected layer and contrast loss function;
